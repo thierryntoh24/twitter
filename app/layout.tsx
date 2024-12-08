@@ -28,7 +28,7 @@ export default async function RootLayout({
             <div className="">
               <Sidebar />
             </div>
-            <main>{children}</main>
+            <main className="w-full">{children}</main>
             <div className="">
               <News />
             </div>

@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import NewsComponent from "./news-component";
 import NewsSkeleton from "./news-skeleton";
 import { fetchTrending } from "@/lib/data";
@@ -17,10 +17,6 @@ export default function News() {
         </div>
         <Suspense fallback={<NewsSkeleton />}>
           <NewsWrapper />
-        </Suspense>
-
-        <Suspense>
-          <SidebarUserCard />
         </Suspense>
       </div>
     </div>

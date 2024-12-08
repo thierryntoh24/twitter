@@ -51,12 +51,12 @@ export function AuthProvider({
       if (event === "SIGNED_OUT") {
         console.log("SIGNED_OUT", session);
 
-        // clear local and session storage
-        [window.localStorage, window.sessionStorage].forEach((storage) => {
-          Object.entries(storage).forEach(([key]) => {
-            storage.removeItem(key);
-          });
-        });
+        // // clear local and session storage
+        // [window.localStorage, window.sessionStorage].forEach((storage) => {
+        //   Object.entries(storage).forEach(([key]) => {
+        //     storage.removeItem(key);
+        //   });
+        // });
 
         setUser(null);
         // router.push("/");
@@ -64,7 +64,6 @@ export function AuthProvider({
       }
 
       if (event === "SIGNED_IN") {
-        console.log("SIGNED_IN", session.user);
         setUser(session.user ?? null);
       }
     });
@@ -84,6 +83,8 @@ export function AuthProvider({
         console.error("Error signing out:", error);
         throw error;
       }
+
+      console.log("Signed out");
 
       // The onAuthStateChange listener will handle routing
     } catch (error) {

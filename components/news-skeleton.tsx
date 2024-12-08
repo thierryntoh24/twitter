@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function NewsSkeleton() {
   return (
     <div className="border border-gray-200 rounded-xl flex-col hidden xl:flex mx-4">

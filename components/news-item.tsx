@@ -1,6 +1,5 @@
 import { Trending } from "@/lib/types";
 import { formatTweetCount } from "@/utils/utils";
-import React from "react";
 
 interface ItemProps {
   phrase: String;

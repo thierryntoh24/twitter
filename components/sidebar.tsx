@@ -7,7 +7,7 @@ import { SidebarUserCard } from "./SidebarUserCard";
 
 export default function Sidebar() {
   return (
-    <div className="sidebar-wrapper">
+    <div className="sidebar-wrapper w-[18rem] h-screen max-h-screen overflow-hidden">
       <div className=" flex flex-col gap-2 p-6 border-r h-screen max-h-screen w-[18rem] overflow-hidden fixed top-0">
         <Link
           href={defaultUrl}

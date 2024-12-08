@@ -63,3 +63,51 @@ export async function getCurrentUser() {
 
   return user;
 }
+
+export async function uploadPost(
+  postContent?: string,
+  image?: File | null
+): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  let imagePath: string | null = null;
+
+  try {
+    if (image) {
+      const { data, error } = await supabase.storage
+        .from("post-photos")
+        .upload(`${user.id}/${image.name}`, image);
+
+      if (error) {
+        console.error("Error uploading file:", error);
+        throw error;
+      }
+
+      imagePath = data.path;
+      console.log("File uploaded successfully:", data.path);
+    }
+
+    if (image) {
+      const { error } = await supabase.from("posts").insert({
+        content: postContent,
+        image: imagePath,
+        author: user.id,
+      });
+
+      if (error) {
+        console.error("Error uploading content:", error);
+        throw error;
+      }
+
+      console.log("Post uploaded successfully:", { postContent, imagePath });
+    }
+  } catch (error) {
+    console.error("Error uploading post:", error);
+    throw error;
+  }
+}
