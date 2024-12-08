@@ -4,6 +4,8 @@ import { geistSans, geistMono } from "@/ui/fonts";
 import Sidebar from "@/components/sidebar";
 import News from "@/components/news";
 import { defaultUrl } from "@/utils/utils";
+import { AuthProvider } from "@/utils/context/AuthContext";
+import { getCurrentUser } from "@/utils/supabase/actions";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -11,23 +13,27 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser(); // Fetch user from Supabase or cookies (server-side).
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} antialiased text-sm`}>
-        <div className="flex justify-between max-w-6xl mx-auto">
-          <div className="">
-            <Sidebar />
+        <AuthProvider initialUser={user}>
+          <div className="flex justify-between max-w-6xl mx-auto">
+            <div className="">
+              <Sidebar />
+            </div>
+            <main>{children}</main>
+            <div className="">
+              <News />
+            </div>
           </div>
-          <main>{children}</main>
-          <div className="">
-            <News />
-          </div>
-        </div>
+        </AuthProvider>
       </body>
     </html>
   );

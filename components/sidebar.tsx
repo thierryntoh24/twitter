@@ -2,11 +2,13 @@ import React from "react";
 import { Home, Twitter } from "lucide-react";
 import Link from "next/link";
 import { defaultUrl } from "@/utils/utils";
+import { LoginButtonComponent } from "./login-button-component";
+import { SidebarUserCard } from "./SidebarUserCard";
 
 export default function Sidebar() {
   return (
     <div className="sidebar-wrapper">
-      <div className=" flex flex-col gap-2 p-6 border-r h-screen w-[18rem]">
+      <div className=" flex flex-col gap-2 p-6 border-r h-screen max-h-screen w-[18rem] overflow-hidden fixed top-0">
         <Link
           href={defaultUrl}
           className="cursor-pointer p-3 hover:bg-gray-100 rounded-full flex transition-all duration-200 w-fit"
@@ -20,9 +22,9 @@ export default function Sidebar() {
           <Home />
           <span className=" hidden xl:block">Home</span>
         </Link>
-        <button className=" bg-blue-400 text-white rounded-full hover:brightness-95 transition-all duration-200 w-48 py-3 hidden xl:block">
-          Log in
-        </button>
+
+        <LoginButtonComponent />
+        <SidebarUserCard />
       </div>
     </div>
   );
