@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import { PostState } from "../types";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -74,13 +75,20 @@ interface UploadData {
   image?: File;
 }
 
-export async function uploadPost(prevState: any, formData: FormData) {
+export async function uploadPost(
+  prevState: PostState,
+  formData: FormData
+): Promise<PostState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { message: "You must sign in to be able to upload" };
+  if (!user)
+    return {
+      message: "You must sign in to upload",
+      success: false,
+    };
 
   let imagePath: string | null = null;
 
@@ -92,18 +100,39 @@ export async function uploadPost(prevState: any, formData: FormData) {
   const isMessageValid = message && message.trim() !== "";
   const isImageValid = image && image.name !== "undefined" && image.size > 0;
 
-  // Log if one of the upload components is missing
-  if (isMessageValid && !isImageValid) {
-    console.log("No image provided with the message");
-  }
-  if (!isMessageValid && isImageValid) {
-    console.log("No message provided with the image");
-  }
-
   // If both are empty, return early
   if (!isMessageValid && !isImageValid) {
-    return { message: "Please provide either a message or an image" };
+    return {
+      message: "Please provide either a message or an image",
+      success: false,
+    };
   }
+
+  // // Simulate a delay and potential error for testing
+  // try {
+  //   await new Promise<PostState>((resolve, reject) => {
+  //     setTimeout(() => {
+  //       const shouldFail = Math.random() > 0.5; // 50% chance of failure
+  //       if (shouldFail) {
+  //         console.error("Simulated error during upload.");
+  //         reject({ message: "Simulated error occurred." });
+  //       } else {
+  //         console.log("Simulated upload successful.");
+  //         resolve({ message: "Simulated upload completed successfully." });
+  //       }
+  //     }, 2000); // 2 seconds delay
+  //   });
+
+  //   return {
+  //     message: "Simulated upload successful.",
+  //     success: true,
+  //   };
+  // } catch (error) {
+  //   return {
+  //     message: "Simulated error during upload.",
+  //     success: false,
+  //   };
+  // }
 
   try {
     // Upload image if present
@@ -113,12 +142,16 @@ export async function uploadPost(prevState: any, formData: FormData) {
         .upload(`${user.id}/${image.name}`, image);
 
       if (error) {
-        console.error("Error uploading image:", error);
-        return { message: "Error uploading image." };
+        console.error("Error uploading file:", error);
+
+        return {
+          message: "Error uploading file",
+          success: false,
+        };
       }
 
-      imagePath = data?.path || null;
-      console.log("Image uploaded successfully:", imagePath);
+      imagePath = data.path;
+      console.log("File uploaded successfully:", data.path);
     }
 
     // Insert post if there's a message or image
@@ -130,21 +163,30 @@ export async function uploadPost(prevState: any, formData: FormData) {
       });
 
       if (error) {
-        console.error("Error uploading post content:", error);
-        return { message: "Error uploading post content." };
-      }
+        console.error("Error uploading content:", error);
 
-      console.log("Post uploaded successfully", {
-        message: message || "No message",
-        imagePath: imagePath || "No image",
-      });
+        return {
+          message: "Error uploading content",
+          success: false,
+        };
+      }
     }
 
-    return { message: "Post uploaded successfully" };
-  } catch (error) {
-    console.error("Unexpected error:", error);
+    console.log("Post uploaded successfully", {
+      message: message || "No message",
+      imagePath: imagePath || "No image",
+    });
+
     return {
-      message: "An unexpected error occurred while uploading the post.",
+      message: "Post uploaded successfully",
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error uploading post:", error);
+
+    return {
+      message: "Error uploading post",
+      success: false,
     };
   }
 }

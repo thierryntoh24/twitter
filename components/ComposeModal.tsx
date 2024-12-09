@@ -1,8 +1,9 @@
 import { User } from "@supabase/supabase-js";
 import { Image } from "lucide-react";
-import React, { useActionState, useState } from "react";
+import React, { useActionState, useCallback, useEffect, useState } from "react";
 import ImageUpload from "./ImageUpload";
 import { uploadPost } from "@/utils/supabase/actions";
+import { PostState } from "@/utils/types";
 
 type ComposeModalProps = {
   user: User;
@@ -19,13 +20,18 @@ export default function ComposeModal({
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // const [isPosting, setIsPosting] = useState(false);
 
-  const initialState: { message: string | null } = { message: null };
+  const initialState: PostState = {
+    message: null,
+    success: false,
+  };
+
   const [state, formAction, isPosting] = useActionState(
     uploadPost,
     initialState
   );
+  // const [isPosting, setIsPosting] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,34 +72,44 @@ export default function ComposeModal({
     setMessage(e.target.value);
   };
 
-  const handlePost = (e: FormData) => {
-    // Prevent double clicks with a loading state
-    if (isPosting) return;
-
-    try {
-      // Ensure user is logged in before attempting to post
-      if (!user) {
-        console.error("User not authenticated.");
-        throw new Error("You must be logged in to post.");
-      }
-      // Attempt to upload the post
-      formAction(e);
-
-      // Reset the modal after successful post
-      console.log("Post uploaded successfully:");
-      resetModal();
-    } catch (error) {
-      console.error("Error posting:", error);
-      // Optionally: Show an error message to the user
-    }
-  };
-
   const resetModal = () => {
     setMessage("");
     setImage(null);
     setImagePreview(null);
+    setLocalError(null);
+    // setIsPosting(false);
     onClose();
   };
+
+  const handlePost = (formData: FormData) => {
+    // Reset previous errors
+    setLocalError(null);
+
+    // Set posting state
+    // setIsPosting(true);
+
+    // Check user authentication
+    if (!user) {
+      setLocalError("You must be logged in to post.");
+      return;
+    }
+
+    // Perform the form action
+    formAction(formData);
+  };
+
+  // Effect to handle state changes
+  useEffect(() => {
+    if (state.success) {
+      // Only reset modal if upload was successful
+      resetModal();
+      // setIsPosting(false);
+    } else if (state.message) {
+      // If there's an error message, set it locally and stop posting
+      setLocalError(state.message);
+      // setIsPosting(false);
+    }
+  }, [state]);
 
   if (!isOpen) return null;
 
@@ -176,6 +192,8 @@ export default function ComposeModal({
               {isPosting ? "Posting..." : "Post"}
             </button>
           </div>
+
+          {localError && <div className="text-red-500 mb-4">{localError}</div>}
         </form>
       </div>
     </div>
