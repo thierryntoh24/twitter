@@ -34,3 +34,8 @@ type Post = {
   title: string;
   body: string;
 };
+
+export interface PostState {
+  message: string | null;
+  success?: boolean;
+}

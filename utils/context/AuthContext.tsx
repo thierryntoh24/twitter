@@ -9,7 +9,7 @@ import React, {
 } from "react";
 
 import { User } from "@supabase/supabase-js";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "../supabase/client";
 
 // Create Supabase client
@@ -36,43 +36,43 @@ export function AuthProvider({
   initialUser: User | null;
 }) {
   const [user, setUser] = useState<User | null>(initialUser);
+  const [initialized, setInitialized] = useState(false); // Track app initialization
+
   const router = useRouter();
 
   useEffect(() => {
+    console.log("AuthProvider mounted");
+
     // Set up auth state change listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        console.log("No Session Found");
-        return;
+      console.log("Auth State Change:", { event, session });
+
+      if (!initialized && event === "SIGNED_IN") {
+        // Ignore this SIGNED_IN if it's the first load (session restoration)
+        console.log("Ignoring session restoration SIGNED_IN");
+      } else if (event === "SIGNED_IN") {
+        console.log("User signed in:", session?.user);
+        setUser(session?.user ?? null);
       }
 
       if (event === "SIGNED_OUT") {
-        console.log("SIGNED_OUT", session);
-
-        // // clear local and session storage
-        // [window.localStorage, window.sessionStorage].forEach((storage) => {
-        //   Object.entries(storage).forEach(([key]) => {
-        //     storage.removeItem(key);
-        //   });
-        // });
-
+        console.log("User signed out");
         setUser(null);
-        // router.push("/");
-        redirect("/");
+        router.push("/"); // Redirect after state update
       }
 
-      if (event === "SIGNED_IN") {
-        setUser(session.user ?? null);
-      }
+      // Mark app as initialized after the first auth state check
+      setInitialized(true);
     });
 
     // Cleanup subscription
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   // Sign out function
   const signOut = async () => {
@@ -84,9 +84,7 @@ export function AuthProvider({
         throw error;
       }
 
-      console.log("Signed out");
-
-      // The onAuthStateChange listener will handle routing
+      console.log("Signed out successfully");
     } catch (error) {
       console.error("Unexpected error during sign out:", error);
     }

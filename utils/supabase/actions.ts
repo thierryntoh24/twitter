@@ -64,50 +64,87 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function uploadPost(
-  postContent?: string,
-  image?: File | null
-): Promise<void> {
+export type UploadState = {
+  errors?: Error | null;
+  message?: string | null;
+};
+
+interface UploadData {
+  message?: string;
+  image?: File;
+}
+
+export async function uploadPost(prevState: any, formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return;
+  if (!user) return { message: "You must sign in to be able to upload" };
 
   let imagePath: string | null = null;
 
+  // Safely extract form data with optional chaining
+  const message = formData.get("message") as string | null;
+  const image = formData.get("image") as File | null;
+
+  // Validate data
+  const isMessageValid = message && message.trim() !== "";
+  const isImageValid = image && image.name !== "undefined" && image.size > 0;
+
+  // Log if one of the upload components is missing
+  if (isMessageValid && !isImageValid) {
+    console.log("No image provided with the message");
+  }
+  if (!isMessageValid && isImageValid) {
+    console.log("No message provided with the image");
+  }
+
+  // If both are empty, return early
+  if (!isMessageValid && !isImageValid) {
+    return { message: "Please provide either a message or an image" };
+  }
+
   try {
-    if (image) {
+    // Upload image if present
+    if (isImageValid) {
       const { data, error } = await supabase.storage
         .from("post-photos")
         .upload(`${user.id}/${image.name}`, image);
 
       if (error) {
-        console.error("Error uploading file:", error);
-        throw error;
+        console.error("Error uploading image:", error);
+        return { message: "Error uploading image." };
       }
 
-      imagePath = data.path;
-      console.log("File uploaded successfully:", data.path);
+      imagePath = data?.path || null;
+      console.log("Image uploaded successfully:", imagePath);
     }
 
-    if (image) {
+    // Insert post if there's a message or image
+    if (isMessageValid || imagePath) {
       const { error } = await supabase.from("posts").insert({
-        content: postContent,
+        content: message || null,
         image: imagePath,
         author: user.id,
       });
 
       if (error) {
-        console.error("Error uploading content:", error);
-        throw error;
+        console.error("Error uploading post content:", error);
+        return { message: "Error uploading post content." };
       }
 
-      console.log("Post uploaded successfully:", { postContent, imagePath });
+      console.log("Post uploaded successfully", {
+        message: message || "No message",
+        imagePath: imagePath || "No image",
+      });
     }
+
+    return { message: "Post uploaded successfully" };
   } catch (error) {
-    console.error("Error uploading post:", error);
-    throw error;
+    console.error("Unexpected error:", error);
+    return {
+      message: "An unexpected error occurred while uploading the post.",
+    };
   }
 }
