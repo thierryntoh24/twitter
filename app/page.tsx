@@ -4,8 +4,11 @@ import PageContent from "./pagecontent";
 import PostCompose from "@/components/ComposeComponent";
 import NavBar from "@/components/navbar";
 import PostsComponent from "@/components/PostsComponent";
+import { fetchPosts } from "@/utils/data";
 
-export default function Home() {
+export default async function Home() {
+  const posts = await fetchPosts(); // Fetch user from Supabase or cookies (server-side).
+
   return (
     <section>
       <NavBar title={"Home"} />
@@ -13,17 +16,15 @@ export default function Home() {
         <PostCompose />
       </div>
 
-      <PostsComponent />
-
-      {/* <Suspense
+      <Suspense
         fallback={
           <div className=" flex w-full py-24 align-middle justify-center items-center">
             Loading...
           </div>
         }
       >
-        <PageContent />
-      </Suspense> */}
+        <PostsComponent initialPosts={posts} />
+      </Suspense>
     </section>
   );
 }

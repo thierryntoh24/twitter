@@ -1,10 +1,14 @@
 import { Post } from "@/utils/types";
 import { User } from "@supabase/supabase-js";
+import Link from "next/link";
 import React from "react";
 
 export default function PostItem({ post }: { post: Post }) {
   return (
-    <div className="px-6 py-4 w-full flex gap-4 align-top border-y border-gray-200">
+    <Link
+      href={`/${post.user_object.email}/status/${post.id}`}
+      className="px-6 py-4 w-full flex gap-4 align-top border-b border-gray-200 hover:bg-gray-200"
+    >
       <img
         src={post.user_object.avatar_url} // Use user's avatar or fallback image
         alt="User Avatar"
@@ -28,6 +32,6 @@ export default function PostItem({ post }: { post: Post }) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -80,7 +80,7 @@ export async function uploadPost(
     if (isImageValid) {
       const { data, error } = await supabase.storage
         .from("post-photos")
-        .upload(`${user.id}/${image.name}`, image);
+        .upload(`${user.id}/${new Date().getTime()}-${image.name}`, image);
 
       if (error) {
         console.error("Error uploading file:", error);
@@ -148,7 +148,36 @@ export async function fetchPosts() {
   }: { data: Post[] | null; error: PostgrestError | null } = await supabase
     .from("posts")
     .select("*")
+    .order("created_at", { ascending: false })
     .range(0, 9);
 
   return posts;
+}
+
+export async function fetchSinglePost(post_id: string) {
+  const supabase = await createClient();
+
+  // Ensure post_id is a valid number
+  const postIdAsNumber = Number(post_id);
+
+  if (isNaN(postIdAsNumber)) {
+    console.error("Invalid post_id provided:", post_id);
+    return;
+  }
+
+  const {
+    data: post,
+    error,
+  }: { data: Post | null; error: PostgrestError | null } = await supabase
+    .from("posts")
+    .select()
+    .eq("id", postIdAsNumber)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  return post;
 }
