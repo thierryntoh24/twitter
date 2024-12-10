@@ -2,8 +2,8 @@ import { User } from "@supabase/supabase-js";
 import { Image } from "lucide-react";
 import React, { useActionState, useCallback, useEffect, useState } from "react";
 import ImageUpload from "./ImageUpload";
-import { uploadPost } from "@/utils/supabase/actions";
 import { PostState } from "@/utils/types";
+import { uploadPost } from "@/utils/data";
 
 type ComposeModalProps = {
   user: User;
@@ -20,18 +20,15 @@ export default function ComposeModal({
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
 
   const initialState: PostState = {
     message: null,
     success: false,
   };
 
-  const [state, formAction, isPosting] = useActionState(
-    uploadPost,
-    initialState
-  );
-  // const [isPosting, setIsPosting] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [state, formAction] = useActionState(uploadPost, initialState);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,37 +74,36 @@ export default function ComposeModal({
     setImage(null);
     setImagePreview(null);
     setLocalError(null);
-    // setIsPosting(false);
+    setIsPosting(false);
     onClose();
   };
 
-  const handlePost = (formData: FormData) => {
-    // Reset previous errors
-    setLocalError(null);
+  const handlePost = useCallback(
+    async (formData: FormData) => {
+      // Check user authentication
+      if (!user) {
+        setLocalError("You must be logged in to post.");
+        return;
+      }
 
-    // Set posting state
-    // setIsPosting(true);
+      // Perform the form action
+      await formAction(formData);
 
-    // Check user authentication
-    if (!user) {
-      setLocalError("You must be logged in to post.");
-      return;
-    }
-
-    // Perform the form action
-    formAction(formData);
-  };
+      setLocalError(null);
+      setIsPosting(true);
+    },
+    [user, formAction]
+  );
 
   // Effect to handle state changes
   useEffect(() => {
     if (state.success) {
       // Only reset modal if upload was successful
       resetModal();
-      // setIsPosting(false);
     } else if (state.message) {
       // If there's an error message, set it locally and stop posting
       setLocalError(state.message);
-      // setIsPosting(false);
+      setIsPosting(false);
     }
   }, [state]);
 

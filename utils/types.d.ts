@@ -28,12 +28,18 @@ type User = {
   company: Company;
 };
 
-type Post = {
-  userId: number;
+export interface Post {
   id: number;
-  title: string;
-  body: string;
-};
+  created_at: string;
+  content?: string;
+  image?: string;
+  author: string;
+  user_object: {
+    name?: string;
+    email?: string;
+    avatar_url?: string;
+  };
+}
 
 export interface PostState {
   message: string | null;

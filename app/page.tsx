@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import PageContent from "./pagecontent";
 import PostCompose from "@/components/ComposeComponent";
 import NavBar from "@/components/navbar";
+import PostsComponent from "@/components/PostsComponent";
 
 export default function Home() {
   return (
@@ -11,6 +12,8 @@ export default function Home() {
       <div className="">
         <PostCompose />
       </div>
+
+      <PostsComponent />
 
       {/* <Suspense
         fallback={
